@@ -46,14 +46,16 @@ func (c *Controller) GetAllUser(req *models.GetListRequest) (models.GetListRespo
 }
 
 func (c *Controller) WithdrawCheque(total float64, userId string) error {
+	
 	user, err := c.store.User().GetByID(&models.UserPrimaryKey{Id: userId})
 	if err != nil {
 		return err
 	}
+
 	if user.Balance >= total {
 		user.Balance -= total
 	} else {
-		return errors.New("You don't have enough money")
+		return errors.New("you don't have enough money")
 	}
 
 	err = c.store.User().Update(&models.UpdateUser{

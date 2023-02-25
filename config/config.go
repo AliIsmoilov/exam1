@@ -6,6 +6,7 @@ type Config struct {
 	ShopCartFileName   string
 	CommissionFileName string
 	CategoryName       string
+	BranchFileName	   string
 }
 
 func Load() Config {
@@ -16,6 +17,7 @@ func Load() Config {
 	cfg.ShopCartFileName = "./data/shop_cart.json"
 	cfg.CommissionFileName = "./data/commission.json"
 	cfg.CategoryName = "./data/category.json"
+	cfg.BranchFileName = "./data/branch.json"
 
 	return cfg
 }

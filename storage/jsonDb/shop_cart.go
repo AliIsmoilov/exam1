@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -41,12 +42,16 @@ func (s *shopCartRepo) AddShopCart(req *models.Add) (string, error) {
 	}
 
 	uuid := uuid.New().String()
+	currentTime := time.Now()
+	currentTime.Format("2022-09-07 20:16:58")
+
 	shopCarts = append(shopCarts, models.ShopCart{
-		Id:        uuid,
 		ProductId: req.ProductId,
 		UserId:    req.UserId,
 		Count:     req.Count,
 		Status:    false,
+		Time: currentTime.String(),
+
 	})
 
 	body, err := json.MarshalIndent(shopCarts, "", " ")
@@ -142,6 +147,43 @@ func (s *shopCartRepo) GetAllShopcarts()(shopcarts []models.ShopCart, err error)
 	if err != nil{
 		return shopcarts, err
 	}
+	
+	return shopcarts, err
+}
 
+func (s *shopCartRepo) UserHistory(req models.UserPrimaryKey) (usershopcarts []models.ShopCart, err error){
+	
+	data, err := ioutil.ReadFile(s.fileName)
+	if err != nil {
+		return []models.ShopCart{}, err
+	}
+
+	var shopCarts []models.ShopCart
+	err = json.Unmarshal(data, &shopCarts)
+	if err != nil {
+		return []models.ShopCart{}, err
+	}
+
+
+
+	for _, shopcart := range shopCarts{
+
+		if shopcart.UserId == req.Id && shopcart.Status{
+			usershopcarts = append(usershopcarts, shopcart)
+		}
+	}
+	return usershopcarts, nil
+}
+
+func (s *shopCartRepo) GetListShopcart() (shopcarts []models.ShopCart, err error){
+
+	shopcarts1, err := s.Read()
+	if err != nil{
+		return shopcarts, err
+	}
+
+	for i:=len(shopcarts1)-1; i >= 0; i--{
+		shopcarts = append(shopcarts, shopcarts1[i])
+	}
 	return shopcarts, err
 }

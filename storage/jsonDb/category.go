@@ -63,7 +63,7 @@ func (u *categoryRepo) GetByID(req *models.CategoryPrimaryKey) (models.Category,
 
 			for _, subCategory := range categories {
 				if v.Id == subCategory.ParentID {
-					v.SubCategories = append(v.SubCategories, subCategory)
+					// v.SubCategories = append(v.SubCategories, subCategory)
 				}
 			}
 

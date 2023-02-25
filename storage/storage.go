@@ -11,6 +11,7 @@ type StorageI interface {
 	ShopCart() ShopCartRepoI
 	Commission() CommissionRepoI
 	Category() CategoryRepoI
+	Branch() BranchRepoI
 }
 
 type UserRepoI interface {
@@ -36,6 +37,8 @@ type ShopCartRepoI interface {
 	GetUserShopCart(*models.UserPrimaryKey) ([]models.ShopCart, error)
 	GetAllShopcarts()(shopcarts []models.ShopCart, err error)
 	UpdateShopCart(string) error
+	UserHistory(req models.UserPrimaryKey) (usershopcarts []models.ShopCart, err error)
+	GetListShopcart() (shopcarts []models.ShopCart, err error)
 }
 
 type CommissionRepoI interface {
@@ -48,4 +51,10 @@ type CategoryRepoI interface {
 	GetAll(*models.GetListCategoryRequest) (models.GetListCategoryResponse, error)
 	Update(*models.UpdateCategory, string) error
 	Delete(*models.CategoryPrimaryKey) error
+}
+
+type BranchRepoI interface{
+	CreateBranch(req models.CreateBranch) (id string, err error)
+	UpdateBranch(req models.UpdateBranch) (err error)
+	DeleteBranch(req models.BranchPrimaryKey) (err error)
 }
