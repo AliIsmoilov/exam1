@@ -2,46 +2,165 @@ package controller
 
 import (
 	"app/models"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
-func (c *Controller) CreateUser(req *models.CreateUser) (string, error) {
-	id, err := c.store.User().Create(req)
-	if err != nil {
+func (c *Controller) CreateUser(w http.ResponseWriter, r * http.Request) (string, error) {
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return "", err
 	}
+
+	var req models.CreateUser
+
+	json.Unmarshal(body, &req)
+
+	id, err := c.store.User().Create(&req)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return "", err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("Created..."))
 	return id, nil
 }
 
-func (c *Controller) DeleteUser(req *models.UserPrimaryKey) error {
-	err := c.store.User().Delete(req)
-	if err != nil {
+func (c *Controller) DeleteUser(w http.ResponseWriter, r * http.Request) error {
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return err
 	}
+
+	var req models.UserPrimaryKey
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	err = c.store.User().Delete(&req)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("Deleted"))
 	return nil
 }
 
-func (c *Controller) UpdateUser(req *models.UpdateUser, userId string) error {
-	err := c.store.User().Update(req, userId)
-	if err != nil {
+func (c *Controller) UpdateUser(w http.ResponseWriter, r * http.Request) error {
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return err
 	}
+
+	var req models.UpdateUser
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	err = c.store.User().Update(&req)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("Updated..."))
 	return nil
 } 
 
-func (c *Controller) GetByIdUser(req *models.UserPrimaryKey) (models.User, error) {
-	user, err := c.store.User().GetByID(req)
+func (c *Controller) GetByIdUser(w http.ResponseWriter, r * http.Request, reqId *models.UserPrimaryKey) (models.User, error) {
+	
+	user, err := c.store.User().GetByID(reqId)
 	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return models.User{}, err
 	}
+
+	data, err := json.Marshal(user)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return models.User{}, err
+	}
+	
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return user, nil
 }
 
-func (c *Controller) GetAllUser(req *models.GetListRequest) (models.GetListResponse, error) {
-	users, err := c.store.User().GetAll(req)
+func (c *Controller) GetAllUser(w http.ResponseWriter, r * http.Request) (models.GetListResponse, error) {
+
+	var req models.GetListRequest
+
+	
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return models.GetListResponse{}, err
+	}
+	
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return models.GetListResponse{}, err
+	}
+	
+	users, err := c.store.User().GetAll(&models.GetListRequest{Offset: req.Offset, Limit: req.Limit})
 	if err != nil {
 		return models.GetListResponse{}, err
 	}
+
+	data, err := json.Marshal(users)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return models.GetListResponse{}, err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return users, nil
 }
 
@@ -60,7 +179,7 @@ func (c *Controller) WithdrawCheque(total float64, userId string) error {
 
 	err = c.store.User().Update(&models.UpdateUser{
 		Balance: user.Balance,
-	}, userId)
+	})
 	if err != nil {
 		return err
 	}
@@ -92,7 +211,7 @@ func (c *Controller) MoneyTransfer(sender string, receiver string, money float64
 		Name: send.Name,
 		Surname: send.Surname,
 		Balance: send.Balance,
-	}, sender)
+	})
 	if err != nil {
 		return err
 	}
@@ -106,7 +225,7 @@ func (c *Controller) MoneyTransfer(sender string, receiver string, money float64
 		Name: receive.Name,
 		Surname: receive.Surname,
 		Balance: receive.Balance,
-	}, receiver)
+	})
 	if err != nil {
 		return err
 	}

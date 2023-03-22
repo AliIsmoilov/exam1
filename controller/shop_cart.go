@@ -2,35 +2,91 @@ package controller
 
 import (
 	"app/models"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
-func (c *Controller) AddShopCart(req *models.Add) (string, error) {
+func (c *Controller) AddShopCart(w http.ResponseWriter, r * http.Request) (string, error) {
 	
-	_, err := c.store.User().GetByID(&models.UserPrimaryKey{Id: req.UserId})
+	var req models.Add
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return "", err
+	}
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return "", err
+	}
+	
+	_, err = c.store.User().GetByID(&models.UserPrimaryKey{Id: req.UserId})
 	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return "", err
 	}
 
 	_, err = c.store.Product().GetByID(&models.ProductPrimaryKey{Id: req.ProductId})
 	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return "", err
 	}
 	
-	id, err := c.store.ShopCart().AddShopCart(req)
+	id, err := c.store.ShopCart().AddShopCart(&req)
 	if err != nil {
 		return "", err
 	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("Created..."))
 	return id, nil
 }
 
-func (c *Controller) RemoveShopCart(req *models.Remove) error {
-	err := c.store.ShopCart().RemoveShopCart(req)
-	if err != nil {
+func (c *Controller) RemoveShopCart(w http.ResponseWriter, r * http.Request) error {
+
+	var req models.Remove
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return err
 	}
-	return err
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+	
+	err = c.store.ShopCart().RemoveShopCart(&req)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte("Deleted..."))
+	return nil
 }
 
 func (c *Controller) CalculateTotal(req *models.UserPrimaryKey, status string, discount float64) (float64, error) {
@@ -68,34 +124,67 @@ func (c *Controller) CalculateTotal(req *models.UserPrimaryKey, status string, d
 	return total, nil
 }
 
-func (c *Controller) SoldProducts()(map[string]int, error){
+func (c *Controller) SoldProducts(w http.ResponseWriter, r * http.Request) (map[string]int, error){
 	
 	result := make(map[string]int)
 
 	allshopcarts, err := c.store.ShopCart().GetAllShopcarts()
 	if err != nil{
-		return result, err
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return make(map[string]int), err
 	}
 	
-	// result := make(map[string]int)
 
 	for _, shopcart := range allshopcarts{
-		if shopcart.Status == true{
+		if shopcart.Status{
 
-			product, err := c.store.Product().GetByID(&models.ProductPrimaryKey{shopcart.ProductId})
+			product, err := c.store.Product().GetByID(&models.ProductPrimaryKey{Id:shopcart.ProductId})
 			if err != nil{
-				return result, err
+				log.Println(err)
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
+				return make(map[string]int), err
 			}
 			result[product.Name]+=shopcart.Count
 		}
 	}
 
+	data, err := json.Marshal(result)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return make(map[string]int), err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return result,nil
 }
 
 
-func (c *Controller) ClientHistory(req *models.UserPrimaryKey) (err error) {
+func (c *Controller) ClientHistory(w http.ResponseWriter, r * http.Request) error {
 	
+	var req models.UserPrimaryKey
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
 	shopcarts, err := c.store.ShopCart().UserHistory(models.UserPrimaryKey{Id: req.Id})
 	if err != nil{
 		return err
@@ -123,8 +212,27 @@ func (c *Controller) ClientHistory(req *models.UserPrimaryKey) (err error) {
 
 }
 
-func (c *Controller) SumofClient(req *models.UserPrimaryKey) (err error) {
+func (c *Controller) SumofClient(w http.ResponseWriter, r * http.Request) error {
 	
+
+	var req models.UserPrimaryKey
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return err
+	}
+
 	shopcarts, err := c.store.ShopCart().UserHistory(models.UserPrimaryKey{Id: req.Id})
 	if err != nil{
 		return err
@@ -135,7 +243,11 @@ func (c *Controller) SumofClient(req *models.UserPrimaryKey) (err error) {
 		return err
 	}
 
-	fmt.Printf("Name %v\n", user.Name)
+	var result models.SumofClient_response
+
+	result.Name = user.Name
+
+	// fmt.Printf("Name %v\n", user.Name)
 
 	sum := 0
 
@@ -149,91 +261,123 @@ func (c *Controller) SumofClient(req *models.UserPrimaryKey) (err error) {
 		sum += int(product.Price) * sh.Count
 	}
 
-	fmt.Printf("Total: %v\n", sum)
+	result.Total = float64(sum)
+	// fmt.Printf("Total: %v\n", sum)
 
+	data, err := json.Marshal(result)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return nil
 }
 
 
 
-func (c *Controller) Top10Products()(map[string]int, error){
+// func (c *Controller) Top10Products()(map[string]int, error){
 	
-	result := make(map[string]int)
+	// result := make(map[string]int)
 
-	AllSoldproducts, err := c.SoldProducts()
+	// AllSoldproducts, err := c.SoldProducts()
 
-	if err != nil{
-		return result, err
-	}
+	// if err != nil{
+	// 	return result, err
+	// }
 
 
 
-	for i:=0; i < 10; i++{
-		max := 0
-		Key := ""
-		for key, val := range AllSoldproducts{
-			if val > max{
-				max = val
-				Key = key
-			}
-		}
+	// for i:=0; i < 10; i++{
+	// 	max := 0
+	// 	Key := ""
+	// 	for key, val := range AllSoldproducts{
+	// 		if val > max{
+	// 			max = val
+	// 			Key = key
+	// 		}
+	// 	}
 
-		fmt.Println(Key,":", max)
-		result[Key]=max
-		delete(AllSoldproducts, Key)
+	// 	fmt.Println(Key,":", max)
+	// 	result[Key]=max
+	// 	delete(AllSoldproducts, Key)
 
-	}
+	// }
 	
 
-	return result, nil
-}
+	// return result, nil
+// }
 
-func (c *Controller) Bottom10Products()(map[string]int, error){
+
+// func (c *Controller) Bottom10Products()(map[string]int, error){
 	
-	result := make(map[string]int)
+// 	result := make(map[string]int)
 
-	AllSoldproducts, err := c.SoldProducts()
+// 	// AllSoldproducts, err := c.SoldProducts()
 
-	if err != nil{
-		return result, err
-	}
+// 	if err != nil{
+// 		return result, err
+// 	}
 
-	min := 0
+// 	min := 0
 	
-	for i:=0; i < 10; i++{
+// 	for i:=0; i < 10; i++{
 		
-		for _, v := range AllSoldproducts{
-			min = v	
-			break
-		}
+// 		for _, v := range AllSoldproducts{
+// 			min = v	
+// 			break
+// 		}
 	
-		Key := ""
-		for key, val := range AllSoldproducts{
-			if val < min{
-				min = val
-				Key = key
-			}
-		}
+// 		Key := ""
+// 		for key, val := range AllSoldproducts{
+// 			if val < min{
+// 				min = val
+// 				Key = key
+// 			}
+// 		}
 
-		fmt.Println(Key,":", min)
-		result[Key]=min
-		delete(AllSoldproducts, Key)
+// 		fmt.Println(Key,":", min)
+// 		result[Key]=min
+// 		delete(AllSoldproducts, Key)
 
+// 	}
+	
+
+// 	return result, nil
+// }
+
+func (c *Controller) FilterByDate(w http.ResponseWriter, r * http.Request) (filtred []models.ShopCart, err error){
+
+
+	var req models.Filter
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return filtred, err
 	}
-	
 
-	return result, nil
-}
+	err = json.Unmarshal(body, &req)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return filtred, err
+	}
 
-func (c *Controller) FilterByDate(req models.Filter) (filtred []models.ShopCart, err error){
 
 	if req.From > req.To{
-		return filtred, errors.New("wrong input")
+		w.WriteHeader(400)
+		return []models.ShopCart{}, errors.New("wrong input")
 	}
 
 	shopcarts, err := c.store.ShopCart().GetAllShopcarts()
 	if err != nil{
-		return filtred, err
+		return []models.ShopCart{}, err
 	}
 
 	for _, shopcart := range shopcarts{
@@ -242,17 +386,30 @@ func (c *Controller) FilterByDate(req models.Filter) (filtred []models.ShopCart,
 		}
 	}
 
+	data, err := json.Marshal(filtred)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return []models.ShopCart{}, err
+	} 
+	
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return filtred,err
 
 }
 
 
-func (c *Controller) SoldProductsByCategory()(map[string]int, error){
+func (c *Controller) SoldProductsByCategory(w http.ResponseWriter, r * http.Request) (map[string]int, error){
 	
 	result := make(map[string]int)
 
 	allshopcarts, err := c.store.ShopCart().GetAllShopcarts()
 	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return result, err
 	}
 	
@@ -263,11 +420,17 @@ func (c *Controller) SoldProductsByCategory()(map[string]int, error){
 
 			product, err := c.store.Product().GetByID(&models.ProductPrimaryKey{Id:shopcart.ProductId})
 			if err != nil{
+				log.Println(err)
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
 				return result, err
 			}
 			
 			category, err := c.store.Category().GetByID(&models.CategoryPrimaryKey{Id: product.CategoryID})
 			if err != nil{
+				log.Println(err)
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
 				return result, err
 			}
 
@@ -275,14 +438,27 @@ func (c *Controller) SoldProductsByCategory()(map[string]int, error){
 		}
 	}
 
+
+	data, err := json.Marshal(result)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return result,nil
 }
 
 
-func (c *Controller) MostActiveClient()(name string, sum int, err error){
+func (c *Controller) MostActiveClient(w http.ResponseWriter, r * http.Request)(name string, sum int, err error){
 	
 	allshopcarts, err := c.store.ShopCart().GetAllShopcarts()
 	if err != nil{
+		fmt.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return "", 0,err
 	}
 
@@ -295,14 +471,14 @@ func (c *Controller) MostActiveClient()(name string, sum int, err error){
 		if shopcart.Status{
 			product, err :=c.store.Product().GetByID(&models.ProductPrimaryKey{Id: shopcart.ProductId})
 			if err != nil{
+				log.Println(err)
+				w.WriteHeader(400)
+				w.Write([]byte(err.Error()))
 				return "", 0,err
 			}
 
-			user, err := c.store.User().GetByID(&models.UserPrimaryKey{Id: shopcart.UserId})
-			// if err != nil{
-			// 	return "", err
-			// }
-			
+			user, _ := c.store.User().GetByID(&models.UserPrimaryKey{Id: shopcart.UserId})
+		
 			
 			sum := int(product.Price * float64(shopcart.Count))
 
@@ -315,15 +491,28 @@ func (c *Controller) MostActiveClient()(name string, sum int, err error){
 
 	}
 
+	result := models.MostActiveClient_response{Name: active_user, Summa: max_sum,}
 	
+	data, err := json.Marshal(result)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return "", 0, err
+	}
 
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return active_user, max_sum, nil
 }
 
-func (c *Controller) TableByDate()(result []models.SortBydate, err error){
+func (c *Controller) TableByDate( w http.ResponseWriter, r * http.Request) (result []models.SortBydate, err error){
 
 	shopcarts, err := c.store.ShopCart().GetAllShopcarts()
 	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return result, err
 	}
 
@@ -350,14 +539,39 @@ func (c *Controller) TableByDate()(result []models.SortBydate, err error){
 			}
 		}
 	}
+
+	data, err := json.Marshal(result)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return []models.SortBydate{}, err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return result, nil
 }
 
-func (c *Controller) GelistShopcart()(res []models.ShopCart, err error){
+func (c *Controller) GetlistShopcart(w http.ResponseWriter, r * http.Request) (res []models.ShopCart, err error){
 	
 	res, err = c.store.ShopCart().GetListShopcart()
 	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return res, err
 	}
+
+	data, err := json.Marshal(res)
+	if err != nil{
+		log.Println(err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return []models.ShopCart{}, err
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(data))
 	return res, nil
 }

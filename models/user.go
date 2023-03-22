@@ -12,6 +12,7 @@ type User struct {
 }
 
 type UpdateUser struct {
+	Id      string  `json:"id"`
 	Name    string  `json:"name"`
 	Surname string  `json:"surname"`
 	Balance float64 `json:"balance"`
@@ -31,4 +32,9 @@ type GetListRequest struct {
 type GetListResponse struct {
 	Count int    `json:"count"`
 	Users []User `json:"users"`
+}
+
+type WithdrawCheque struct{
+	Total float64	`json:"total"`
+	UserId	string	`json:"id"`
 }

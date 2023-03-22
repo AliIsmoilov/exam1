@@ -25,14 +25,15 @@ type CreateProduct struct {
 }
 
 type UpdateProduct struct {
-	Name       string  `json:"name"`
-	Price      float64 `json:"price"`
-	CategoryID string  `json:"category_id"`
+	Id		 	string	`json:id`
+	Name       	string  `json:"name"`
+	Price      	float64 `json:"price"`
+	CategoryID 	string  `json:"category_id"`
 }
 
 type GetListProduct struct {
 	Count    int       `json:"count"`
-	Products []Product `json:"products"`
+	Products []ProductWithCategory `json:"products"`
 	// CategoryId string 	`json:"category_id"`
 }
 

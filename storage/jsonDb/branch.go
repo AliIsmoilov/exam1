@@ -118,5 +118,20 @@ func (b *branchRepo) DeleteBranch(req models.BranchPrimaryKey) (err error){
 		}
 	}
 
-	return errors.New("nott found user with input id")
+	return errors.New("not found user with input id")
+}
+
+func (b *branchRepo) Get_Branches() ([]models.Branch, error){
+
+	data, err := ioutil.ReadFile(b.fileName)
+	if err != nil {
+		return []models.Branch{}, err
+	}
+
+	var branches []models.Branch
+	err = json.Unmarshal(data, &branches)
+	if err != nil {
+		return []models.Branch{}, err
+	}
+	return branches, nil
 }

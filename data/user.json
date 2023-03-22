@@ -76,5 +76,11 @@
   "name": "Annie",
   "surname": "Vandervort",
   "balance": 17000000
+ },
+ {
+  "id": "f586573d-b365-4fe1-8cb0-aa7e9d74ba04",
+  "name": "Ali",
+  "surname": "Ismoilov",
+  "balance": 200000
  }
 ]

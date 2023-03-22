@@ -32,3 +32,13 @@ type SortBydate struct{
 	Time string
 	Count int
 }
+
+type SumofClient_response struct{
+	Name string
+	Total float64
+}
+
+type MostActiveClient_response struct{
+	Name string
+	Summa int
+}

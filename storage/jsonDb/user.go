@@ -90,7 +90,7 @@ func (u *userRepo) Delete(req *models.UserPrimaryKey) error {
 	return nil
 }
 
-func (u *userRepo) Update(req *models.UpdateUser, userId string) error {
+func (u *userRepo) Update(req *models.UpdateUser) error {
 	users, err := u.Read()
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (u *userRepo) Update(req *models.UpdateUser, userId string) error {
 
 	flag := true
 	for i, v := range users {
-		if v.Id == userId {
+		if v.Id == req.Id {
 			users[i].Name = req.Name
 			users[i].Surname = req.Surname
 			users[i].Balance = req.Balance
@@ -138,6 +138,7 @@ func (u *userRepo) GetByID(req *models.UserPrimaryKey) (models.User, error) {
 }
 
 func (u *userRepo) GetAll(req *models.GetListRequest) (models.GetListResponse, error) {
+	
 	users, err := u.Read()
 	if err != nil {
 		return models.GetListResponse{}, err
@@ -148,9 +149,11 @@ func (u *userRepo) GetAll(req *models.GetListRequest) (models.GetListResponse, e
 	}
 	
 	fUsers := []models.User{}
+
 	for i:=req.Offset; i<req.Offset+req.Limit; i++ {
 		fUsers = append(fUsers, users[i])
 	}
+
 	return models.GetListResponse{
 		Users: fUsers,
 		Count: len(fUsers),

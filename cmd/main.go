@@ -3,6 +3,8 @@ package main
 import (
 	"app/config"
 	"app/controller"
+	"app/models"
+	"net/http"
 
 	"app/storage/jsonDb"
 	"fmt"
@@ -22,172 +24,155 @@ func main() {
 	c := controller.NewController(&cfg, jsonDb)
 
 
-	// 1---------------------------------------------------
+	http.HandleFunc("/branch", func(w http.ResponseWriter, r *http.Request) {
 
-	// shopcarts, err := c.FilterByDate(models.Filter{From: "2022-10-06 13:57:45", To: "2022-10-08 13:57:45"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// for i, sh := range shopcarts{
-	// 	fmt.Printf("%v. %v\n", i+1, sh)
-	// }
-	
-
-	// 2---------------------------------------------------
-
-	// err = c.ClientHistory(&models.UserPrimaryKey{Id: "ddc46ae9-6ccc-450a-ad74-50276f3c09f2"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }err = c.ClientHistory(&models.UserPrimaryKey{Id: "ddc46ae9-6ccc-450a-ad74-50276f3c09f2"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
+		if r.Method == "POST"{
+			c.CreateBranch(w, r)
+		} else if r.Method == "GET"{
+			c.Get_Branches(w,r)
+		} else if r.Method == "PUT"{
+			c.UpdateBranch(w, r)
+		} else if r.Method == "DELETE"{
+			c.DeleteBranch(w, r)
+		}
+	})
 
 
-	// 3---------------------------------------------------
-	
-	// err = c.SumofClient(&models.UserPrimaryKey{Id: "ddc46ae9-6ccc-450a-ad74-50276f3c09f2"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
+	http.HandleFunc("/category", func(w http.ResponseWriter, r *http.Request) {
 
-
-	// 4---------------------------------------------------
-
-	// res, err := c.SoldProducts()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println(res)
-
-
-	// 5---------------------------------------------------
-	
-	// res, err := c.Top10Products()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println(res)
-
-
-	// 6---------------------------------------------------
-	
-	// res, err := c.Bottom10Products()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println(res)
+		if r.Method == "POST"{
+			str, err := c.CreateCategory(w, r)
+			if err == nil{
+				fmt.Println(str)
+			}
+		} else if r.Method == "GET"{
+			c.GetAllCategory(w, r)
+		} else if r.Method == "DELETE"{
+			c.DeleteCategory(w, r)
+		} else if r.Method == "PUT"{
+			c.UpdateCategory(w, r)
+		}
+	})
 
 	
-	// 7---------------------------------------------------
+	http.HandleFunc("/product/ab24c8e8-878a-4b20-ba09-f68de00bbe3d", func(w http.ResponseWriter, r *http.Request){
+
+		if r.Method == "POST"{
+			c.CreateProduct(w,r)
+		} else if r.Method == "DELETE"{
+			c.DeleteProduct(w,r)
+		} else if r.Method == "PUT"{
+			c.UpdateProduct(w,r)
+		} else if r.Method == "GET"{
+
+			id := r.URL.Path[len("/product/"):]
+
+			if len(id) > 0{
+				c.GetByIdProduct(w,r, id)
+			} else {
+				c.GetAllProduct(w,r)
+			}
+		}
+	})
+
+
+	http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "POST"{
+			c.CreateUser(w,r)
+		} else if r.Method == "DELETE"{
+			c.DeleteUser(w,r)
+		} else if r.Method == "PUT"{
+			c.UpdateUser(w,r)
+		} else if r.Method == "GET"{
+			id := r.URL.Path[len("/user/"):]
+			
+			if len(id)>0{
+				c.GetByIdUser(w,r, &models.UserPrimaryKey{Id: id})
+			} else {
+				c.GetAllUser(w,r)
+			}
+		}
+	})
+
+	http.HandleFunc("/shopcart", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "POST"{
+			c.AddShopCart(w,r)
+		} else if r.Method == "DELETE"{
+			c.RemoveShopCart(w,r)
+		}
+	})
+
+
+	http.HandleFunc("/report/sold-products", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.SoldProducts(w,r)
+		}
+	})
+
+	http.HandleFunc("/report/client-history", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.ClientHistory(w,r)
+		}
+	})
+
+	http.HandleFunc("/report/sum-of-client", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.SumofClient(w,r)
+		}
+	})
+
+	http.HandleFunc("/report/filter-by-date", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.FilterByDate(w,r)
+		}
+	})
+
+	http.HandleFunc("/report/sold-products-by-category", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.SoldProductsByCategory(w,r)
+		}
+	})
+
+
+	http.HandleFunc("/report/most-active-user", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.MostActiveClient(w,r)
+		}
+	})
+
+
+	http.HandleFunc("/report/table_date", func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method == "GET"{
+			c.TableByDate(w,r)
+		}
+	})
 	
-	// res, err := c.TableByDate()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-
-	// for _, v := range res{
-	// 	fmt.Println(v)
-	// }
-
-
-	// 8---------------------------------------------------
 	
-	// res, err := c.SoldProductsByCategory()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println(res)
+	http.HandleFunc("/report/getlist-shopcart", func(w http.ResponseWriter, r *http.Request) {
 
-	
-	// 9---------------------------------------------------
-	
-	// res, num, err := c.MostActiveClient()
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println(res, num)
+		if r.Method == "GET"{
+			c.GetlistShopcart(w,r)
+		}
+	})
 	
 	
-	// 10---------------------------------------------------
-	
-	// newsh := models.Add{
-	// 	ProductId: "120c0bd8-09db-4433-aa50-c217d2473edb",
-	// 	UserId: "0b4af7a2-12de-4970-92ca-e2289d86eb63",
-	// 	Count: 10,
-	// }
-	// _, _  = c.AddShopCart(&newsh)
 	
 	
-	// product, err := c.GetByIdProduct(&models.ProductPrimaryKey{Id: "120c0bd8-09db-4433-aa50-c217d2473edb"}) 
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-
-	// total := 0
-
-	// if newsh.Count > 9{
-	// 	total = int(product.Price) * (newsh.Count-1)	
-	// } else {
-	// 	total = int(product.Price) * newsh.Count
-	// }
 	
+	fmt.Println("Listen 4005...")
 
-	// err = c.WithdrawCheque(float64(total), "0b4af7a2-12de-4970-92ca-e2289d86eb63")
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-
-
-	
-	// 11---------------------------------------------------
-	
-	
-	// id, err := c.CreateBranch(models.CreateBranch{Name: "Drujba"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-
-	// fmt.Println(id)
-
-	// err = c.UpdateBranch(models.UpdateBranch{Id: "94307fed-1ab7-4a3d-a648-cf9fcf5c2021", Name: "Chilonzor"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println("User has been Updated")
-
-	
-	// err = c.DeleteBranch(models.BranchPrimaryKey{Id: "3fd48c09-e569-4d90-8103-3217ee61d2dd"})
-	// if err != nil{
-	// 	log.Println(err)
-	// 	return
-	// }
-	// fmt.Println("User has been deleted")
-
-
-	// 12---------------------------------------------------
-
-	res, err := c.GelistShopcart()
+	err = http.ListenAndServe("localhost:4005", nil)
 	if err != nil{
 		log.Println(err)
 		return
-	}
-
-	for _, sh := range res{
-		fmt.Println(sh)
 	}
 }	

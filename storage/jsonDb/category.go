@@ -94,7 +94,7 @@ func (u *categoryRepo) GetAll(req *models.GetListCategoryRequest) (models.GetLis
 	}, nil
 }
 
-func (u *categoryRepo) Update(req *models.UpdateCategory, userId string) error {
+func (u *categoryRepo) Update(req *models.UpdateCategory) error {
 	categories, err := u.Read()
 	if err != nil {
 		return err
@@ -102,10 +102,11 @@ func (u *categoryRepo) Update(req *models.UpdateCategory, userId string) error {
 
 	flag := true
 	for i, v := range categories {
-		if v.Id == userId {
+		if v.Id == req.Id {
 			categories[i].Name = req.Name
 			categories[i].ParentID = req.ParentID
 			flag = false
+			break
 		}
 	}
 

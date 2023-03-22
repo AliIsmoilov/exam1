@@ -17,7 +17,7 @@ type StorageI interface {
 type UserRepoI interface {
 	Create(*models.CreateUser) (string, error)
 	Delete(*models.UserPrimaryKey) error
-	Update(*models.UpdateUser, string) error
+	Update(req *models.UpdateUser) error
 	GetByID(*models.UserPrimaryKey) (models.User, error)
 	GetAll(*models.GetListRequest) (models.GetListResponse, error)
 }
@@ -27,7 +27,7 @@ type ProductRepoI interface {
 	GetByID(*models.ProductPrimaryKey) (models.ProductWithCategory, error)
 	GetListProduct(models.GetListRequestPr) (products []models.ProductWithCategory, err error)
 	GetAll() (models.GetListProduct, error)
-	Update(*models.UpdateProduct, string) error
+	Update(req *models.UpdateProduct) error
 	Delete(*models.ProductPrimaryKey) error
 }
 
@@ -49,7 +49,7 @@ type CategoryRepoI interface {
 	Create(*models.CreateCategory) (string, error)
 	GetByID(*models.CategoryPrimaryKey) (models.Category, error)
 	GetAll(*models.GetListCategoryRequest) (models.GetListCategoryResponse, error)
-	Update(*models.UpdateCategory, string) error
+	Update(req *models.UpdateCategory) error
 	Delete(*models.CategoryPrimaryKey) error
 }
 
@@ -57,4 +57,5 @@ type BranchRepoI interface{
 	CreateBranch(req models.CreateBranch) (id string, err error)
 	UpdateBranch(req models.UpdateBranch) (err error)
 	DeleteBranch(req models.BranchPrimaryKey) (err error)
+	Get_Branches() ([]models.Branch, error)
 }

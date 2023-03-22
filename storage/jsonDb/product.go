@@ -76,7 +76,7 @@ func (p *productRepo) Delete(req *models.ProductPrimaryKey) error {
 	return nil
 }
 
-func (p *productRepo) Update(req *models.UpdateProduct, productId string) error {
+func (p *productRepo) Update(req *models.UpdateProduct) error {
 	products, err := p.Read()
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (p *productRepo) Update(req *models.UpdateProduct, productId string) error 
 
 	flag := true
 	for i, v := range products {
-		if v.Id == productId {
+		if v.Id == req.Id {
 			products[i].Name = req.Name
 			products[i].Price = req.Price
 			flag = false
@@ -163,16 +163,16 @@ func (p *productRepo) GetListProduct(req models.GetListRequestPr) (products []mo
 
 }
 
-func (p *productRepo) Read() ([]models.Product, error) {
+func (p *productRepo) Read() ([]models.ProductWithCategory, error) {
 	data, err := ioutil.ReadFile(p.fileName)
 	if err != nil {
-		return []models.Product{}, err
+		return []models.ProductWithCategory{}, err
 	}
 
-	var products []models.Product
+	var products []models.ProductWithCategory
 	err = json.Unmarshal(data, &products)
 	if err != nil {
-		return []models.Product{}, err
+		return []models.ProductWithCategory{}, err
 	}
 	return products, nil
 }
